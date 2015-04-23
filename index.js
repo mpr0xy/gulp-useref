@@ -154,7 +154,6 @@ module.exports.assets = function (opts) {
     });
 
     assetStream.restore = function () {
-        console.log("restore")
         return restoreStream.pipe(through.obj(), { end: false });
     };
 
