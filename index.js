@@ -3,6 +3,9 @@ var gutil = require('gulp-util'),
     through = require('through2'),
     useref = require('node-useref'),
     path = require('path');
+var md5 = require('MD5');
+
+var replaceMap = {}
 
 function getSearchPaths(cwd, searchPath, filepath) {
     // Check for multiple search paths within the array
@@ -15,19 +18,18 @@ function getSearchPaths(cwd, searchPath, filepath) {
     }
 }
 
-module.exports = function (opts) {
+module.exports = function () {
     return through.obj(function (file, enc, cb) {
         if (file.isNull()) {
             cb(null, file);
             return;
         }
-
         if (file.isStream()) {
             cb(new gutil.PluginError('gulp-useref', 'Streaming not supported'));
             return;
         }
 
-        var output = useref(file.contents.toString(), opts);
+        var output = useref(file.contents.toString());
         var html = output[0];
 
         try {
@@ -116,11 +118,24 @@ module.exports.assets = function (opts) {
                 src
                     .pipe(gulpif(!opts.noconcat, concat(name)))
                     .pipe(through.obj(function (newFile, enc, callback) {
+                        /****** mp add ********/
+                        newFile.path = path.join(path.dirname(newFile.path),
+                            path.basename(newFile.path, path.extname(newFile.path)) + '_' + md5(newFile.contents) + path.extname(newFile.path)
+                        );
+                        replaceMap[path.basename(name)] = path.basename(newFile.path);
+                        var fileString = file.contents.toString()
+                        for (var key in replaceMap) {
+                            if (replaceMap.hasOwnProperty(key))
+                                fileString = fileString.replace(key, replaceMap[key])
+                        }
+                        file.contents = new Buffer(fileString);
+                        /****** mp add end ********/
                         this.push(newFile);
                         callback();
                     }.bind(this)))
                     .on('finish', function () {
                         if (--unprocessed === 0 && end) {
+
                             this.emit('end');
                         }
                     }.bind(this));
@@ -129,7 +144,7 @@ module.exports.assets = function (opts) {
 
         }, this);
 
-        restoreStream.write(file, cb);
+        restoreStream.write(file, cb)
 
     }, function () {
         end = true;
@@ -139,6 +154,7 @@ module.exports.assets = function (opts) {
     });
 
     assetStream.restore = function () {
+        console.log("restore")
         return restoreStream.pipe(through.obj(), { end: false });
     };
 
