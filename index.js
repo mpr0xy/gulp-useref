@@ -57,6 +57,9 @@ module.exports.assets = function (opts) {
         restoreStream = through.obj(),
         unprocessed = 0,
         end = false;
+    /***** mp add *****/
+    var prefix = opts.prefix || "";
+    /***** mp add end *****/
 
     var assetStream = through.obj(function (file, enc, cb) {
         var output = useref(file.contents.toString());
@@ -124,6 +127,7 @@ module.exports.assets = function (opts) {
                         );
                         replaceMap[path.basename(name)] = path.basename(newFile.path);
                         var fileString = file.contents.toString()
+                        fileString = fileString.replace(name, prefix + name);
                         for (var key in replaceMap) {
                             if (replaceMap.hasOwnProperty(key))
                                 fileString = fileString.replace(key, replaceMap[key])
