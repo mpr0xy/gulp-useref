@@ -85,11 +85,9 @@ module.exports.assets = function (opts) {
                 }
 
                 /*** mp add ***/
-                console.log(filepaths);
                 for (var i = 0, len = filepaths.length; i < len; i++) {
                     filepaths[i] = filepaths[i].replace(clearString, "");
                 }
-                console.log(filepaths);
 
                 var fileString = file.contents.toString()
                 fileString = fileString.replace(name, prefix + name);
@@ -145,7 +143,6 @@ module.exports.assets = function (opts) {
                         var fileString = file.contents.toString()
                         for (var key in replaceMap) {
                             if (replaceMap.hasOwnProperty(key)) {
-                                console.log(key);
                                 fileString = fileString.replace(key, replaceMap[key])
                             }
                         }
