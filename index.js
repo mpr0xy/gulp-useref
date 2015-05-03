@@ -59,11 +59,13 @@ module.exports.assets = function (opts) {
         end = false;
     /***** mp add *****/
     var prefix = opts.prefix || "";
+    var clearString = opts.clearString || "";
     /***** mp add end *****/
 
     var assetStream = through.obj(function (file, enc, cb) {
         var output = useref(file.contents.toString());
         var assets = output[1];
+
 
         types.forEach(function (type) {
             var files = assets[type];
@@ -81,6 +83,19 @@ module.exports.assets = function (opts) {
                 if (!filepaths.length) {
                     return;
                 }
+
+                /*** mp add ***/
+                console.log(filepaths);
+                for (var i = 0, len = filepaths.length; i < len; i++) {
+                    filepaths[i] = filepaths[i].replace(clearString, "");
+                }
+                console.log(filepaths);
+
+                var fileString = file.contents.toString()
+                fileString = fileString.replace(name, prefix + name);
+                file.contents = new Buffer(fileString);
+
+                /*** mp add end ***/
 
                 unprocessed++;
 
@@ -125,12 +140,14 @@ module.exports.assets = function (opts) {
                         newFile.path = path.join(path.dirname(newFile.path),
                             path.basename(newFile.path, path.extname(newFile.path)) + '_' + md5(newFile.contents) + path.extname(newFile.path)
                         );
+                        var replaceMap = {};
                         replaceMap[path.basename(name)] = path.basename(newFile.path);
                         var fileString = file.contents.toString()
-                        fileString = fileString.replace(name, prefix + name);
                         for (var key in replaceMap) {
-                            if (replaceMap.hasOwnProperty(key))
+                            if (replaceMap.hasOwnProperty(key)) {
+                                console.log(key);
                                 fileString = fileString.replace(key, replaceMap[key])
+                            }
                         }
                         file.contents = new Buffer(fileString);
                         /****** mp add end ********/
@@ -139,7 +156,6 @@ module.exports.assets = function (opts) {
                     }.bind(this)))
                     .on('finish', function () {
                         if (--unprocessed === 0 && end) {
-
                             this.emit('end');
                         }
                     }.bind(this));
@@ -149,6 +165,7 @@ module.exports.assets = function (opts) {
         }, this);
 
         restoreStream.write(file, cb)
+
 
     }, function () {
         end = true;
