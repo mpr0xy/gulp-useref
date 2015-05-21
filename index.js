@@ -149,6 +149,7 @@ module.exports.assets = function (opts) {
                         file.contents = new Buffer(fileString);
                         /****** mp add end ********/
                         this.push(newFile);
+                        this.push(file);
                         callback();
                     }.bind(this)))
                     .on('finish', function () {
